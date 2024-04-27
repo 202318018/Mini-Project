@@ -1,11 +1,11 @@
 """
-Smart Blockchain - Nodes
-Created on Tue Mar 17 10:31:31 2020
+Smart Blockchain - Block Producer
+Created on Mon Mar 16 20:46:28 2020
 @author: Somayyeh & Mehran
 
-Filename:  nodes_v2_5002.py 
-Mine: By BPSC & Selfie chain
-Port: 5002
+Filename: bpsc103.py 
+Mine: For each transaction & Whenever you instruct
+Port: 5000
 
 In “Smart Blockchain”, one or more block producers smart contract (BPSC) is present in the network, 
 and no successful transaction is performed without BPSC involvement. For a successful transaction 
@@ -28,15 +28,14 @@ from flask import Flask, jsonify, request
 
 class Smart_Blockchain:
     def __init__(self):
-        self.current_information = []        
+        self.current_transactions = []
         self.chain = []
-        self.chain2 = []
         self.nodes = set()
 
         # Create the genesis block
         self.new_block(previous_hash='1')
-        
-        
+
+
     def register_node(self, address):
         """
         Add a new node to the list of nodes
@@ -81,34 +80,47 @@ class Smart_Blockchain:
         """
 
         block = {
-            'index2': len(self.chain2) + 1,
+            'index': len(self.chain) + 1,
             'timestamp': time(),
-            'information': self.current_information,
-            'previous_hash': previous_hash or self.hash(self.chain2[-1]),
+            'transactions': self.current_transactions,
+            'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
 
         # Reset the current list of transactions
-        self.current_information = []
+        self.current_transactions = []
 
-        self.chain2.append(block)
+        self.chain.append(block)
         return block
 
+
+    def new_transaction(self, sender, amount, recipient):
+        """
+        Creates a new transaction to go into the next mined Block
+        :param sender: Address of the Sender
+        :param amount_send: The amount sent by the sender
+        :param bpsc: Address of the Smart contract (bpsc)
+        :param amount_bpsc: The amount received by bpsc (Transaction fees)
+        :param recipient: Address of the Recipient
+        :param amount_receive: The amount received by the recipient
+        :return: The index of the Block that will hold this transaction
+        """
+        self.current_transactions.append({
+            'sender': sender,
+            'amount_send': amount,
+             
+            'bpsc': 'bpsc_wallet_address', # Block Producer Smart Contract (bpsc)
+            'amount_bpsc': amount * 0.00005, # Transaction fees
+            
+            'recipient': recipient,
+            'amount_receive': amount * 0.99995,
+        })
+
+        return self.last_block['index'] + 1
         
-    def new_information(self, information):
-        """
-        Creates a new information
-        :param information: Your information
-        :return: The index of the Block that will hold this information
-        """
-        self.current_information.append({'information': information })
-
-
-        return self.last_block['index2'] + 1
-
 
     @property
     def last_block(self):
-        return self.chain2[-1]
+        return self.chain[-1]
 
 
     @staticmethod
@@ -122,7 +134,7 @@ class Smart_Blockchain:
         block_string = json.dumps(block, sort_keys=True).encode()
         return hashlib.sha256(block_string).hexdigest()
 
-            
+    
 # Instantiate the Node
 app = Flask(__name__)
 
@@ -140,36 +152,41 @@ def mine():
 
     response = {
         'message': "New Block Forged",
-        'index2': block['index2'],
-        'information': block['information'],
+        'index': block['index'],
+        'transactions': block['transactions'],
         'previous_hash': block['previous_hash'],
     }
     return jsonify(response), 200
 
 
-@app.route('/information/new', methods=['POST'])
-def new_information():
+@app.route('/transactions/new', methods=['POST'])
+def new_transaction():
     values = request.get_json()
 
     # Check that the required fields are in the POST'ed data
-    required = ['information']
+    required = ['sender', 'amount', 'recipient']
     if not all(k in values for k in required):
         return 'Missing values', 400
 
-    # Create a new information
-    index = blockchain.new_information(values['information'])
+    # Create a new Transaction
+    index = blockchain.new_transaction(values['sender'], values['amount'], values['recipient'])
     
-    response = {'message': f'information will be added to Block {index}'}
-    return jsonify(response), 201
+    response = {'message': f'Transaction will be added to Block {index}'}
 
+    last_block = blockchain.last_block
 
-@app.route('/chain2', methods=['GET'])
-def full_chain2():
+    # Forge the new Block by adding it to the chain
+    previous_hash = blockchain.hash(last_block)
+    block = blockchain.new_block(previous_hash)
+
     response = {
-        'chain2': blockchain.chain2,
-        'length': len(blockchain.chain2),
+        'message': "New Block Forged",
+        'index': block['index'],
+        'transactions': block['transactions'],
+        'previous_hash': block['previous_hash'],
     }
-    return jsonify(response), 200
+
+    return jsonify(response), 201
 
 
 @app.route('/chain', methods=['GET'])
@@ -223,12 +240,10 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument('-p', '--port', default=5002, type=int, help='port to listen on')
+    parser.add_argument('-p', '--port', default=5000, type=int, help='port to listen on')
     args = parser.parse_args()
     port = args.port
 
     app.run(host='0.0.0.0', port=port)
-
-
 
 
