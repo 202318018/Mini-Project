@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request
 
 class Smart_Blockchain:
     def __init__(self):
-        self.current_information = []        
+        self.current_information = []
         self.chain = []
         self.chain2 = []
         self.nodes = set()
@@ -18,13 +18,13 @@ class Smart_Blockchain:
     def register_node(self, address):
         """
         Add a new node to the list of nodes
-        :param address: Address of node. Eg. 'http://192.168.0.5:5000'
+        :param address: Address of node. Eg. 'http://192.168.0.5:5001'
         """
         parsed_url = urlparse(address)
         if parsed_url.netloc:
             self.nodes.add(parsed_url.netloc)
         elif parsed_url.path:
-            # Accepts an URL without scheme like '192.168.0.5:5000'.
+            # Accepts an URL without scheme like '192.168.0.5:5001'.
             self.nodes.add(parsed_url.path)
         else:
             raise ValueError('Invalid URL')
@@ -33,10 +33,10 @@ class Smart_Blockchain:
         """
         All nodes can receive the smart_chain
         """
-        schain = None       
-        response = requests.get(f'http://127.0.0.1:5000/chain')
+        schain = None
+        response = requests.get(f'http://127.0.0.1:5001/chain')
         if response.status_code == 200:
-            chain = response.json()['chain']                
+            chain = response.json()['chain']
             schain = chain
         # Replace our chain
         if schain:
@@ -82,7 +82,7 @@ class Smart_Blockchain:
         """
         # We must make sure that the Dictionary is Ordered, or we'll have inconsistent hashes
         block_string = json.dumps(block, sort_keys=True).encode()
-        return hashlib.sha256(block_string).hexdigest()            
+        return hashlib.sha256(block_string).hexdigest()
 
 # Instantiate the Node
 app = Flask(__name__)
@@ -148,7 +148,7 @@ def register_nodes():
 @app.route('/smart/chain', methods=['GET'])
 def smart_chain():
     replaced = blockchain.smart_chain()
-    if replaced:    
+    if replaced:
         response = {
             'message': 'Smart chain update by bpsc',
             'smart chain': blockchain.chain,
@@ -158,7 +158,7 @@ def smart_chain():
         response = {
             'message': 'Unsuccessful: Please try again',
             'old chain': blockchain.chain,
-            'length': len(blockchain.chain)            
+            'length': len(blockchain.chain)
         }
     return jsonify(response), 200
 
