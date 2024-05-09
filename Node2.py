@@ -1,22 +1,3 @@
-"""
-Smart Blockchain - Nodes
-Created on Tue Mar 17 10:31:31 2020
-@author: Somayyeh & Mehran
-
-Filename:  nodes_v2_5002.py 
-Mine: By BPSC & Selfie chain
-Port: 5002
-
-In “Smart Blockchain”, one or more block producers smart contract (BPSC) is present in the network, 
-and no successful transaction is performed without BPSC involvement. For a successful transaction 
-in the network, first, the sender must send the cryptocurrency to the wallet of BPSC and then BPSC 
-sends cryptocurrency automatically to the receiver. This simple action has led the BPSC to have all 
-network transactions’ data accurately and flawlessly and then as an accurate and trust financial 
-institution, record transactions’ data into a new block and add this new block to the end of the 
-blockchain so there would be no task for miners in “Smart Blockchain”.
-
-"""
-
 import hashlib
 import json
 from time import time
